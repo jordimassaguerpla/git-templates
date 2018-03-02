@@ -1,30 +1,44 @@
 #!/usr/bin/python
 
-import sys, re
+import os
+import subprocess
+import sys
+import re
 
 if len(sys.argv) != 2:
   print "Usage ", sys.argv[0], " file"
   sys.exit(1)
 
+filename = sys.argv[1]
 patterns = ["\w+#\w+"]
-commitMessageFile = open(sys.argv[1]) # The first arg is the file
-commitMessage = commitMessageFile.read().strip()
 
 found = False
-for pattern in patterns:
-  if re.search(pattern, commitMessage) is not None:
-    found = True
-    break
+while not found:
+  commitMessageFile = open(filename) # The first arg is the file
+  commitMessage = commitMessageFile.read().strip()
+  commitMessageFile.close()
+  for pattern in patterns:
+    if re.search(pattern, commitMessage) is not None:
+      found = True
+      break
 
-if not found:
-  print "\"Please Be Kind\" ... and add in your commit message a bug/feature tracker number."
-  print "Get inspired by"
-  print "https://raw.githubusercontent.com/openSUSE/open-build-service/master/docs/api/api/issue_trackers.xml"
-  print "https://en.opensuse.org/openSUSE:Packaging_Patches_guidelines#Current_set_of_abbreviations"
-  print ""
-  print "You can also use a more generic tag, as in:"
-  print "feature#foo"
-  sys.exit(1)
+  if not found:
+    print "\"Please Be Kind\" ... and add in your commit message a bug/feature tracker number."
+    print "Get inspired by"
+    print "https://raw.githubusercontent.com/openSUSE/open-build-service/master/docs/api/api/issue_trackers.xml"
+    print "https://en.opensuse.org/openSUSE:Packaging_Patches_guidelines#Current_set_of_abbreviations"
+    print ""
+    print "You can also use a more generic tag, as in:"
+    print "feature#foo"
+    print ""
+    answer = ""
+    while answer != "y" and answer != "n":
+      sys.stdin = open('/dev/tty')
+      answer = raw_input('Do you want to edit the message and try again?(y/n)')
+    if answer == "n":
+      print "Commit aborted."
+      sys.exit(1)
+    subprocess.call([os.environ["EDITOR"], filename], stdin=sys.stdin)
 
 print "Commit message is validated"
 sys.exit(0)
